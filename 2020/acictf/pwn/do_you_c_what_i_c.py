@@ -1,6 +1,32 @@
 #!/usr/bin/python
 
-#we don't do pwntools
+# we don't do pwntools
+
+# exploit for ACICTF do_you_c_what_i_c.exe 250 pt pwnable
+# DEP was disabled, so you could have used shellcode (and my scoring solution did)
+# but why not ROP? So read this writeup as if DEP was enabled
+#
+# The program let you read and write integer values using index values into a 256 integer
+# stack array. Read indicies were not validated giving arbitrary read of the entire address
+# space with sufficiently large, or negative index values. Write indicies were required
+# to be less than 256, but the comparison was a signed one so that is no comparison at
+# all on a 32-bit system. This seems to have been lost on many people (including the organizers?)
+
+# The authors did award you a 64 byte read into a buffer at &saved_eip - 24 so there was a
+# limited overflow available with a canary in the way. You could of course leak the canary
+# using the arbitrary read, but why go to all that trouble to earn a yourself 10 dword rop chain?
+
+# Keeping in mind that all indicies into an integer array are scaled by sizeof(int), here's
+# some math: -1073741823 = 0xc0000001 and 0xc0000001 * 4 = 0x300000004 % 2^32 = 4, and 4/4 = 1.
+# so array[-1073741823] is equivalent to array[1]
+
+# this exploit uses the available read and write primitives to implement a GetProcAdress
+# equivalent, to lookup CreateFielA, and ReadFile, then lays down a ROP chain without ever
+# thinking about the canary. The ROP is roughly the following:
+# CreateFile("D:\Flag.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+# ReadFile(handle, buffer, 512, &NumberOfBytesRead, NULL);
+# send(sock, buffer, 512, 0)
+# exit(status)
 
 import struct
 import socket
