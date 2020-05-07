@@ -6,6 +6,8 @@ This is a multi-threaded race car management system. As the name and use of thre
 
 ## The Flaws
 
+Got straight to the [exploit](./speed_racer.py) if you like.
+
 In the add car function we see the following coutesy if IDA's decompiler:
 
 ```c
